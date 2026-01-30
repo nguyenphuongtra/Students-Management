@@ -78,28 +78,50 @@
 
         // 2. Hàm Lưu (Tạo mới hoặc Cập nhật)
         async function saveStudent() {
-            const id = document.getElementById("studentId").value;
+            const idValue = document.getElementById("studentId").value;
             const name = document.getElementById("name").value;
             const email = document.getElementById("email").value;
-
-            const method = id ? "PUT" : "POST"; // Có ID thì là sửa, không có là thêm
-            const url = id ? `${API_URL}/${id}` : API_URL;
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email })
-            });
-
-            const result = await response.json();
-            if(result.status === "success") {
-                alert(result.message);
-                document.getElementById("studentId").value = ""; // Reset form
-                document.getElementById("name").value = "";
-                document.getElementById("email").value = "";
-                loadStudents(); // Tải lại bảng
-            } else {
-                alert("Lỗi: " + result.message);
+        
+            if (!name || !email) {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+        
+            // Tạo object dữ liệu sạch
+            const studentData = {
+                name: name.trim(),
+                email: email.trim()
+            };
+        
+            // Chỉ thêm ID vào body nếu đang ở chế độ SỬA (id có giá trị)
+            if (idValue) {
+                studentData.id = parseInt(idValue);
+            }
+        
+            const method = idValue ? "PUT" : "POST";
+            const url = idValue ? `${API_URL}/${idValue}` : API_URL;
+        
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(studentData) 
+                });
+        
+                const result = await response.json();
+                if (response.ok && result.status === "success") {
+                    alert(result.message);
+                    // Reset form hoàn toàn
+                    document.getElementById("studentId").value = ""; 
+                    document.getElementById("name").value = "";
+                    document.getElementById("email").value = "";
+                    loadStudents(); 
+                } else {
+                    alert("Lỗi: " + (result.message || "Không thể lưu dữ liệu"));
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối:", error);
+                alert("Lỗi kết nối server!");
             }
         }
 
